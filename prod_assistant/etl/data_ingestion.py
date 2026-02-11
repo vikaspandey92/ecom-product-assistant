@@ -41,7 +41,6 @@ class DataIngestion:
         self.db_keyspace = os.getenv("ASTRA_DB_KEYSPACE")
 
        
-
     def _get_csv_path(self):
         """
         Get path to the CSV file located inside 'data' folder.
@@ -56,7 +55,7 @@ class DataIngestion:
 
     def _load_csv(self):
         """
-        Load product data from CSV.
+        Load product data from CSV with schema check.
         """
         df = pd.read_csv(self.csv_path)
         expected_columns = {'product_id','product_title', 'rating', 'total_reviews','price', 'top_reviews'}

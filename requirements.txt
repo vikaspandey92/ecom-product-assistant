@@ -2,7 +2,6 @@ beautifulsoup4==4.13.5
 fastapi==0.116.1
 html5lib==1.1
 jinja2==3.1.6
-langchain==0.3.27
 langchain-astradb==0.6.1
 langchain_core==0.3.75
 langchain-google-genai==2.1.8
@@ -21,3 +20,8 @@ langchain-mcp-adapters==0.1.10
 mcp==1.14.0
 ddgs==9.6.0
 langchain-openai==0.3.32
+sentence-transformers
+huggingface_hub
+transformers
+langchain
+langchain-huggingface

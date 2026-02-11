@@ -31,6 +31,7 @@ review_count = st.number_input("How many reviews per product?", min_value=1, max
 
 if st.button("🚀 Start Scraping"):
     product_inputs = [p.strip() for p in st.session_state.product_inputs if p.strip()]
+
     if product_description.strip():
         product_inputs.append(product_description.strip())
 
@@ -38,10 +39,23 @@ if st.button("🚀 Start Scraping"):
         st.warning("⚠️ Please enter at least one product name or a product description.")
     else:
         final_data = []
-        for query in product_inputs:
-            st.write(f"🔍 Searching for: {query}")
-            results = flipkart_scraper.scrape_flipkart_products(query, max_products=max_products, review_count=review_count)
-            final_data.extend(results)
+
+        progress_bar = st.progress(0)
+        total_queries = len(product_inputs)
+
+        with st.spinner("🕷️ Scraping in progress... Please wait"):
+            for idx, query in enumerate(product_inputs):
+                st.write(f"🔍 Searching for: {query}")
+
+                results = flipkart_scraper.scrape_flipkart_products(
+                    query,
+                    max_products=max_products,
+                    review_count=review_count
+                )
+
+                final_data.extend(results)
+
+                progress_bar.progress((idx + 1) / total_queries)
 
         unique_products = {}
         for row in final_data:
@@ -49,10 +63,18 @@ if st.button("🚀 Start Scraping"):
                 unique_products[row[1]] = row
 
         final_data = list(unique_products.values())
-        st.session_state["scraped_data"] = final_data  # store in session
+
+        st.session_state["scraped_data"] = final_data
         flipkart_scraper.save_to_csv(final_data, output_path)
-        st.success("✅ Data saved to `data/product_reviews.csv`")
-        st.download_button("📥 Download CSV", data=open(output_path, "rb"), file_name="product_reviews.csv")
+
+        st.success("✅ Data saved to CSV!")
+        with open(output_path, "rb") as f:
+            st.download_button(
+                "📥 Download CSV",
+                data=f,
+                file_name="product_reviews.csv"
+            )
+
 
 # This stays OUTSIDE "if st.button('Start Scraping')"
 if "scraped_data" in st.session_state and st.button("🧠 Store in Vector DB (AstraDB)"):

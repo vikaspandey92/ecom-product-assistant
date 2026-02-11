@@ -2,17 +2,19 @@ import os
 import sys
 import json
 from dotenv import load_dotenv
-from utils.config_loader import load_config
+from prod_assistant.utils.config_loader import load_config
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_openai import ChatOpenAI
 from langchain_groq import ChatGroq
-from logger import GLOBAL_LOGGER as log
-from exception.custom_exception import ProductAssistantException
+from prod_assistant.logger import GLOBAL_LOGGER as log
+from prod_assistant.exception.custom_exception import ProductAssistantException
 import asyncio
 
 
 class ApiKeyManager:
     def __init__(self):
+        load_dotenv()
         self.api_keys = {
             "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY"),
             "GOOGLE_API_KEY": os.getenv("GOOGLE_API_KEY"),
@@ -51,17 +53,20 @@ class ModelLoader:
         try:
             model_name = self.config["embedding_model"]["model_name"]
             log.info("Loading embedding model", model=model_name)
-
+            
             # Patch: Ensure an event loop exists for gRPC aio
             try:
                 asyncio.get_running_loop()
             except RuntimeError:
                 asyncio.set_event_loop(asyncio.new_event_loop())
 
-            return GoogleGenerativeAIEmbeddings(
-                model=model_name,
-                google_api_key=self.api_key_mgr.get("GOOGLE_API_KEY")  # type: ignore
-            )
+            return HuggingFaceEmbeddings(
+            model_name=model_name,
+            encode_kwargs={
+                "batch_size": 64,
+                "normalize_embeddings": True
+            }
+        )
         except Exception as e:
             log.error("Error loading embedding model", error=str(e))
             raise ProductAssistantException("Failed to load embedding model", sys)
